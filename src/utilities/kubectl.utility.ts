@@ -21,13 +21,13 @@ export class Kubernetes {
       .catch((err) => {
         console.error(err, typeof err);
         if (err.toString().includes("credentials")) {
-          WindowWrapper.alert(
+          WindowWrapper.error(
             "Invalid credentials, please try running the login command"
           );
           return false;
         }
 
-        WindowWrapper.alert(
+        WindowWrapper.error(
           "Unable to connect to cluster. Check your Internet/VPN"
         );
         return false;
@@ -51,25 +51,25 @@ export class Kubernetes {
   }
 
   public static async getNamespaces(): Promise<string[]> {
-    const namespaces = await CommandLine.execute("kubectl get namespaces");
+    const namespaces = await CommandLine.execute(
+      "kubectl get namespaces -o jsonpath='{.items[*].metadata.name}'"
+    );
 
     const namespaceNames = namespaces
-      .split("\n")
-      .filter((namespace) => namespace.length > 0)
-      .map((namespace) => namespace.split(" ")[0]);
+      .split(" ")
+      .map((namespace) => this.formatRefName(namespace));
 
     return namespaceNames;
   }
 
   public static async getDeployments(namespace: string): Promise<string[]> {
     const deployments = await CommandLine.execute(
-      `kubectl get deployments -n ${namespace}`
+      `kubectl get deployments -n ${namespace} -o jsonpath='{.items[*].metadata.name}'`
     );
 
     const deploymentNames = deployments
-      .split("\n")
-      .filter((deployment) => deployment.length > 0)
-      .map((deployment) => deployment.split(" ")[0]);
+      .split(" ")
+      .map((deployment) => this.formatRefName(deployment));
 
     return deploymentNames;
   }
@@ -81,8 +81,6 @@ export class Kubernetes {
     const secrets = await CommandLine.execute(
       `kubectl get deployment ${deployment} -n ${namespace} -o jsonpath='{.spec.template.spec.containers[*].envFrom[*].secretRef.name}'`
     );
-
-    console.log(secrets);
 
     const secretNames = secrets
       .split(" ")
@@ -123,8 +121,6 @@ export class Kubernetes {
     const configMaps = await CommandLine.execute(
       `kubectl get deployments ${deployment} -n ${namespace} -o jsonpath='{.spec.template.spec.containers[*].envFrom[*].configMapRef.name}'`
     );
-
-    console.log(configMaps);
 
     const configMapNames = configMaps
       .split(" ")

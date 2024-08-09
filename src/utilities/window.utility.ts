@@ -2,8 +2,12 @@ import fs from "fs";
 import * as vscode from "vscode";
 
 export class WindowWrapper {
-  public static alert(message: string): void {
+  public static error(message: string): void {
     vscode.window.showErrorMessage(message);
+  }
+
+  public static success(message: string): void {
+    vscode.window.showInformationMessage(message);
   }
 
   public static dropdown(options: string[]) {
@@ -31,7 +35,7 @@ export class WindowWrapper {
       const workspaceFolders = vscode.workspace.workspaceFolders;
 
       if (!workspaceFolders) {
-        WindowWrapper.alert("No workspace folder found");
+        WindowWrapper.error("No workspace folder found");
         return;
       }
 
@@ -41,9 +45,9 @@ export class WindowWrapper {
         encoding: "utf-8",
       });
 
-      WindowWrapper.alert(`File ${filename} created successfully`);
+      WindowWrapper.success(`File ${filename} created successfully`);
     } catch (error) {
-      WindowWrapper.alert(`Error creating file: ${error}`);
+      WindowWrapper.error(`Error creating file: ${error}`);
     }
   }
 }

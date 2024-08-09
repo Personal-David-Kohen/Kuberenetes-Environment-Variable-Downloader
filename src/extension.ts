@@ -11,7 +11,7 @@ export const activate = (context: vscode.ExtensionContext) => {
       const isKubectlInstalled = await Kubernetes.isInstalled();
 
       if (!isKubectlInstalled) {
-        WindowWrapper.alert(
+        WindowWrapper.error(
           "kubectl is not installed. Please install kubectl and try again."
         );
         return;

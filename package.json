@@ -2,7 +2,7 @@
   "name": "kubernetes-environment-variable-downloader",
   "displayName": "kubernetes-environment-variable-downloader",
   "description": "Allows you to copy environment variable from a remote kubernetes deployment to a local .env file",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "david-kohen",
   "repository": "https://github.com/Personal-David-Kohen/Kuberenetes-Environment-Variable-Downloader",
   "engines": {
