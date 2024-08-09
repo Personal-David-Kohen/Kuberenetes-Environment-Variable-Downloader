@@ -34,7 +34,7 @@ jobs:
 
       - name: Get Package name
         id: get_package_name
-        run: echo ::set-output name=repo_name::$(node -p "require('./package.json').name")
+        run: echo ::set-output name=package_name::$(node -p "require('./package.json').name")
 
       - name: Create Release
         id: create_release
@@ -43,7 +43,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.get_version.outputs.version }}
-          release_name: ${{ steps.get_package_name.outputs.version }}-${{ steps.get_version.outputs.version }}
+          release_name: ${{ steps.get_package_name.outputs.package_name }}-${{ steps.get_version.outputs.version }}
           draft: false
           prerelease: false
 
@@ -54,6 +54,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./${{ steps.get_package_name.outputs.repo_name }}-${{ steps.get_version.outputs.version }}.vsix
-          asset_name: ${{ steps.get_package_name.outputs.repo_name }}-${{ steps.get_version.outputs.version }}.vsix
+          asset_path: ./${{ steps.get_package_name.outputs.package_name }}-${{ steps.get_version.outputs.version }}.vsix
+          asset_name: ${{ steps.get_package_name.outputs.package_name }}-${{ steps.get_version.outputs.version }}.vsix
           asset_content_type: application/vsix
