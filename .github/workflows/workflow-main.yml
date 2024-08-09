@@ -32,12 +32,12 @@ jobs:
         id: get_version
         run: echo ::set-output name=version::$(node -p "require('./package.json').version")
 
-      - name: Get Lowercase Repo name
-        id: get_repo_name
-        run: echo ::set-output name=repo_name::$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')
+      - name: Get Package name
+        id: get_package_name
+        run: echo ::set-output name=repo_name::$(node -p "require('./package.json').name")
 
       - name: Deploy
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ steps.get_repo_name.outputs.repo_name }}-${{ steps.get_version.outputs.version }}.vsix
-          path: ${{ steps.get_repo_name.outputs.repo_name }}-${{ steps.get_version.outputs.version }}.vsix
+          name: ${{ steps.get_package_name.outputs.repo_name }}-${{ steps.get_version.outputs.version }}.vsix
+          path: ${{ steps.get_package_name.outputs.repo_name }}-${{ steps.get_version.outputs.version }}.vsix
