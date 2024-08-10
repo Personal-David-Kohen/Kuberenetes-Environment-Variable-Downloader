@@ -1,25 +1,32 @@
 import * as vscode from "vscode";
+import { DotEnv } from "./utilities/dotenv.utility";
+import { ACTIONS } from "./constants/actions.constant";
+import { MESSAGES } from "./constants/messages.constant";
 import { Kubernetes } from "./utilities/kubectl.utility";
 import { WindowWrapper } from "./utilities/window.utility";
 
 export const activate = (context: vscode.ExtensionContext) => {
-  console.log('Loaded extension "kubernetes-environment-variable-downloader"');
-
   const disposable = vscode.commands.registerCommand(
-    "kubernetes-environment-variable-downloader.downloadRemote",
+    ACTIONS.DOWNLOAD_REMOTE,
     async () => {
+      const loader = WindowWrapper.showLoader(MESSAGES.LOADING.GENERAL);
       const isKubectlInstalled = await Kubernetes.isInstalled();
 
       if (!isKubectlInstalled) {
-        WindowWrapper.error(
-          "kubectl is not installed. Please install kubectl and try again."
-        );
+        WindowWrapper.error(MESSAGES.ERROR.KUBECTL_NOT_INSTALLED);
         return;
       }
 
       const clusterNames = await Kubernetes.getClusters();
+      loader.hide();
 
-      const selectedCluster = await WindowWrapper.dropdown(clusterNames);
+      const selectedCluster = await WindowWrapper.dropdown(
+        clusterNames,
+        MESSAGES.SELECT.CLUSTER
+      );
+
+      loader.text = MESSAGES.LOADING.NAMESPACES;
+      loader.show();
 
       await Kubernetes.setCluster(selectedCluster);
 
@@ -30,12 +37,26 @@ export const activate = (context: vscode.ExtensionContext) => {
       }
 
       const namespaces = await Kubernetes.getNamespaces();
+      loader.hide();
 
-      const selectedNamespace = await WindowWrapper.dropdown(namespaces);
+      const selectedNamespace = await WindowWrapper.dropdown(
+        namespaces,
+        MESSAGES.SELECT.NAMESPACE
+      );
+
+      loader.text = MESSAGES.LOADING.DEPLOYMENTS;
+      loader.show();
 
       const deployments = await Kubernetes.getDeployments(selectedNamespace);
 
-      const selectedDeployment = await WindowWrapper.dropdown(deployments);
+      loader.hide();
+      const selectedDeployment = await WindowWrapper.dropdown(
+        deployments,
+        MESSAGES.SELECT.DEPLOYMENT
+      );
+
+      loader.text = MESSAGES.LOADING.ENVIRONMENT_VARIABLES;
+      loader.show();
 
       const environmentVariables =
         await Kubernetes.getAllEnvironmentVariablesFromDeployment(
@@ -43,13 +64,13 @@ export const activate = (context: vscode.ExtensionContext) => {
           selectedDeployment
         );
 
-      const fileContent = Object.entries(environmentVariables)
-        .map(([key, value]) => {
-          return `${key}="${value}"`;
-        })
-        .join("\n");
+      loader.hide();
 
-      WindowWrapper.createFileInProjectDirectory(".env", fileContent);
+      const success = await DotEnv.upsertDotEnvFile(environmentVariables);
+
+      if (success) {
+        WindowWrapper.success(MESSAGES.SUCCESS.ENVIRONMENT_VARIABLES);
+      }
     }
   );
 

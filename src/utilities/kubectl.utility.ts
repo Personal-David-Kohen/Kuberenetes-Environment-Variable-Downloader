@@ -1,3 +1,4 @@
+import { MESSAGES } from "../constants/messages.constant";
 import { Base64 } from "./base64.utility";
 import { CommandLine } from "./command.utility";
 import { WindowWrapper } from "./window.utility";
@@ -21,15 +22,11 @@ export class Kubernetes {
       .catch((err) => {
         console.error(err, typeof err);
         if (err.toString().includes("credentials")) {
-          WindowWrapper.error(
-            "Invalid credentials, please try running the login command"
-          );
+          WindowWrapper.error(MESSAGES.ERROR.CREDENTIALS);
           return false;
         }
 
-        WindowWrapper.error(
-          "Unable to connect to cluster. Check your Internet/VPN"
-        );
+        WindowWrapper.error(MESSAGES.ERROR.CONNECTION);
         return false;
       });
   }
