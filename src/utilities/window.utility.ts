@@ -8,34 +8,38 @@ export const USER_CHOICE = {
   NO_TO_ALL: "No to all",
 };
 
+interface IDropdownSettings {
+  title: string;
+  loadingMessage: string;
+}
+
 export class WindowWrapper {
   public static error(message: string): void {
-    vscode.window.showErrorMessage(message);
+    vscode.window.showErrorMessage(message, { modal: true });
   }
 
   public static success(message: string): void {
-    vscode.window.showInformationMessage(message);
+    vscode.window.showInformationMessage(message, { modal: true });
   }
 
-  public static showLoader(message: string) {
-    const statusBarItem = vscode.window.createStatusBarItem(
-      vscode.StatusBarAlignment.Left
-    );
-
-    statusBarItem.text = message;
-    statusBarItem.show();
-
-    return statusBarItem;
-  }
-
-  public static dropdown(options: string[], title: string) {
+  public static async dropdownAsync(
+    options: Promise<string[]>,
+    settings: IDropdownSettings
+  ) {
     const picker = vscode.window.createQuickPick();
 
-    picker.title = title;
+    picker.busy = true;
     picker.canSelectMany = false;
-    picker.items = options.map((option) => ({ label: option }));
+    picker.title = settings.title;
+    picker.placeholder = settings.loadingMessage;
 
     picker.show();
+
+    await options.then((options) => {
+      picker.items = options.map((option) => ({ label: option }));
+      picker.placeholder = settings.title;
+      picker.busy = false;
+    });
 
     return new Promise<string>((resolve) => {
       picker.onDidChangeSelection((selection) => {

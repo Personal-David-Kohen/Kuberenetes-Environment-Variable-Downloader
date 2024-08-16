@@ -9,7 +9,6 @@ export const activate = (context: vscode.ExtensionContext) => {
   const disposable = vscode.commands.registerCommand(
     ACTIONS.DOWNLOAD_REMOTE,
     async () => {
-      const loader = WindowWrapper.showLoader(MESSAGES.LOADING.GENERAL);
       const isKubectlInstalled = await Kubernetes.isInstalled();
 
       if (!isKubectlInstalled) {
@@ -17,54 +16,37 @@ export const activate = (context: vscode.ExtensionContext) => {
         return;
       }
 
-      const clusterNames = await Kubernetes.getClusters();
-      loader.hide();
+      const clusterNames = Kubernetes.getClusters();
 
-      const selectedCluster = await WindowWrapper.dropdown(
-        clusterNames,
-        MESSAGES.SELECT.CLUSTER
-      );
-
-      loader.text = MESSAGES.LOADING.NAMESPACES;
-      loader.show();
+      const selectedCluster = await WindowWrapper.dropdownAsync(clusterNames, {
+        title: MESSAGES.SELECT.CLUSTER,
+        loadingMessage: MESSAGES.LOADING.CLUSTERS,
+      });
 
       await Kubernetes.setCluster(selectedCluster);
 
-      const isAbleToConnect = await Kubernetes.isAbleToConnect();
+      const namespaces = Kubernetes.getNamespaces();
 
-      if (!isAbleToConnect) {
-        return;
-      }
+      const selectedNamespace = await WindowWrapper.dropdownAsync(namespaces, {
+        title: MESSAGES.SELECT.NAMESPACE,
+        loadingMessage: MESSAGES.LOADING.NAMESPACES,
+      });
 
-      const namespaces = await Kubernetes.getNamespaces();
-      loader.hide();
+      const deployments = Kubernetes.getDeployments(selectedNamespace);
 
-      const selectedNamespace = await WindowWrapper.dropdown(
-        namespaces,
-        MESSAGES.SELECT.NAMESPACE
-      );
-
-      loader.text = MESSAGES.LOADING.DEPLOYMENTS;
-      loader.show();
-
-      const deployments = await Kubernetes.getDeployments(selectedNamespace);
-
-      loader.hide();
-      const selectedDeployment = await WindowWrapper.dropdown(
+      const selectedDeployment = await WindowWrapper.dropdownAsync(
         deployments,
-        MESSAGES.SELECT.DEPLOYMENT
+        {
+          title: MESSAGES.SELECT.DEPLOYMENT,
+          loadingMessage: MESSAGES.LOADING.DEPLOYMENTS,
+        }
       );
-
-      loader.text = MESSAGES.LOADING.ENVIRONMENT_VARIABLES;
-      loader.show();
 
       const environmentVariables =
         await Kubernetes.getAllEnvironmentVariablesFromDeployment(
           selectedNamespace,
           selectedDeployment
         );
-
-      loader.hide();
 
       const success = await DotEnv.upsertDotEnvFile(environmentVariables);
 
